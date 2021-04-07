@@ -17,10 +17,13 @@ echo "Waiting for kafka cluster..."
 kubectl wait kafka/local-kafka --for=condition=Ready --timeout=300s -n kafka
 echo "Kafka is up and running"
 
+PORT=$(kubectl get service local-kafka-kafka-external-bootstrap -n kafka -o=jsonpath='{.spec.ports[0].nodePort}{"\n"}')
+IP=$(kubectl get nodes --output=jsonpath='{range .items[*]}{.status.addresses[?(@.type=="InternalIP")].address}{"\n"}{end}')
+
 echo "Port forwarding Kafka bootstrap servers..."
-echo "bootstrap-servers: localhost:9091,localhost:9092,localhost:9093"
+echo "bootstrap-servers: ${IP}:${PORT}"
 sleep 30
-kubectl -n kafka  port-forward service/local-kafka-kafka-bootstrap 9091:9091 9092:9092 9093:9093
+kubectl -n kafka  port-forward service/local-kafka-kafka-bootstrap 9092:9092
 
 echo "stop minikube..."
 minikube stop
